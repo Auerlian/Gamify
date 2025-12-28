@@ -183,29 +183,296 @@ body {
 }
 
 /* Timer Display */
-.timer-display {
+.timer-container {
   text-align: center;
-  margin: 40px 0;
+  padding: 24px 0;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.timer-container.timer-active {
+  padding: 48px 0;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+  border-radius: 16px;
+  margin: -20px -20px 24px -20px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .timer-time {
   font-size: 48px;
   font-weight: 700;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  color: #3b82f6;
-  margin-bottom: 16px;
+  color: #6b7280;
   letter-spacing: -0.02em;
+  transition: all 0.3s ease;
 }
 
-.timer-domain {
-  font-size: 18px;
+.timer-time-large {
+  font-size: 64px;
+  color: #3b82f6;
+}
+
+.timer-context {
+  margin-top: 12px;
+  font-size: 16px;
   color: #9ca3af;
+}
+
+.timer-domain-name {
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.timer-activity-name {
+  color: #6b7280;
+}
+
+.timer-paused-badge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 12px;
+  background-color: #f59e0b;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+}
+
+/* Compact Summary Row */
+.today-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.summary-balance {
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.summary-divider {
+  color: #4b5563;
+}
+
+.summary-stat {
+  color: #9ca3af;
+}
+
+/* Chip Selection */
+.selection-section {
+  margin-bottom: 20px;
+}
+
+.selection-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.optional-tag {
+  font-weight: 400;
+  color: #4b5563;
+  text-transform: lowercase;
+  letter-spacing: normal;
+}
+
+.chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 20px;
+  color: #f9fafb;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:hover {
+  background-color: #374151;
+}
+
+.chip-selected {
+  background-color: #1e40af;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.chip-meta {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.chip-selected .chip-meta {
+  color: #93c5fd;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-action {
+  padding: 16px;
+  min-width: 56px;
+}
+
+.btn-action-main {
+  flex: 1;
+  padding: 16px 24px;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #374151;
+  color: #9ca3af;
+}
+
+.btn-ghost:hover {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+/* Session Result Modal */
+.session-result-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.session-result-modal {
+  background: #1f2937;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  animation: slideUp 0.3s ease-out;
+}
+
+.result-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+  color: white;
+}
+
+.result-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f9fafb;
   margin-bottom: 8px;
 }
 
-.timer-activity {
+.result-domain {
   font-size: 16px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin-bottom: 4px;
+}
+
+.result-activity {
+  font-size: 14px;
   color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding: 16px 0;
+  border-top: 1px solid #374151;
+  border-bottom: 1px solid #374151;
+}
+
+.result-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f9fafb;
+}
+
+.result-stat-points .result-stat-value {
+  color: #10b981;
+}
+
+.result-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.result-penalty {
+  font-size: 12px;
+  color: #f59e0b;
+  margin-bottom: 16px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Domain/Activity Selectors */
