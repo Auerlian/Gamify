@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ShoppingCart, AlertTriangle, Trophy, Sparkles } from 'lucide-react'
+import { AlertTriangle, Trophy, Sparkles, Zap, Gift } from 'lucide-react'
 import { db, getCurrentBalance } from '../database'
 import { ShopItem, Redemption } from '../types'
 
@@ -41,10 +41,22 @@ function CelebrationOverlay({ item, onComplete }: { item: ShopItem; onComplete: 
   )
 }
 
+// Category icon mapping
+const getCategoryIcon = (category: string) => {
+  const lower = category.toLowerCase()
+  if (lower.includes('treat') || lower.includes('food') || lower.includes('snack')) return '🍕'
+  if (lower.includes('entertainment') || lower.includes('fun')) return '🎮'
+  if (lower.includes('health') || lower.includes('wellness')) return '💪'
+  if (lower.includes('tech') || lower.includes('gadget')) return '📱'
+  if (lower.includes('travel') || lower.includes('experience')) return '✈️'
+  if (lower.includes('big') || lower.includes('major') || lower.includes('luxury')) return '💎'
+  if (lower.includes('small') || lower.includes('quick')) return '⚡'
+  return '🎁'
+}
+
 export default function ShopTab() {
   const [shopItems, setShopItems] = useState<ShopItem[]>([])
   const [balance, setBalance] = useState(0)
-  const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [loading, setLoading] = useState(true)
   const [recentRedemptions, setRecentRedemptions] = useState<Redemption[]>([])
   const [celebratingItem, setCelebratingItem] = useState<ShopItem | null>(null)
@@ -90,13 +102,17 @@ export default function ShopTab() {
     }
   }
 
-  const categories = ['All', ...new Set(shopItems.map(item => item.category))]
+  const categories = [...new Set(shopItems.map(item => item.category))]
   
-  const filteredItems = selectedCategory === 'All' 
-    ? shopItems 
-    : shopItems.filter(item => item.category === selectedCategory)
+  // Group items by category
+  const itemsByCategory = categories.reduce((acc, category) => {
+    acc[category] = shopItems.filter(item => item.category === category)
+      .sort((a, b) => a.pricePoints - b.pricePoints)
+    return acc
+  }, {} as Record<string, ShopItem[]>)
 
   const canAfford = (price: number) => balance >= price
+  const affordabilityPercent = (price: number) => Math.min(100, Math.round((balance / price) * 100))
 
   const handlePurchase = async (item: ShopItem) => {
     if (!canAfford(item.pricePoints)) {
@@ -175,126 +191,119 @@ export default function ShopTab() {
         <CelebrationOverlay item={celebratingItem} onComplete={handleCelebrationComplete} />
       )}
       
-      <h1 className="page-title">Life Shop</h1>
-
-      {/* Balance Display */}
-      <div className="balance-display">
-        <div className="balance-amount">{balance.toLocaleString()}</div>
-        <div className="balance-label">Points Available</div>
+      {/* Hero Balance */}
+      <div className="shop-hero">
+        <div className="shop-hero-label">Your Balance</div>
+        <div className="shop-hero-balance">{balance.toLocaleString()}</div>
+        <div className="shop-hero-currency">points to spend</div>
       </div>
 
-      {/* Category Filter */}
-      <div className="card">
-        <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
-          {categories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`btn ${selectedCategory === category ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ fontSize: '14px', padding: '8px 16px' }}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Shop Items */}
-      <div className="shop-grid">
-        {filteredItems.map(item => {
-          const achievedCount = itemAchievedCounts.get(item.id!) || 0
-          return (
-            <div key={item.id} className="shop-item">
-              <div className="shop-item-info">
-                <div className="shop-item-name">
-                  {item.name}
-                  {item.requiresReview && (
-                    <AlertTriangle 
-                      size={16} 
-                      style={{ marginLeft: '8px', color: '#f59e0b', display: 'inline' }} 
-                    />
-                  )}
-                </div>
-                <div className="shop-item-category">{item.category}</div>
-                {item.realCostEstimate && (
-                  <div className="shop-item-cost">~{item.realCostEstimate}</div>
-                )}
-                {item.cooldownDays && (
-                  <div className="shop-item-cost">Cooldown: {item.cooldownDays} days</div>
-                )}
-                {item.requirements && item.requirements.length > 0 && (
-                  <div className="shop-item-requirements">
-                    <span style={{ color: '#f59e0b', fontSize: '11px' }}>
-                      Requires: {item.requirements.join(', ')}
-                    </span>
-                  </div>
-                )}
-                {achievedCount > 0 && (
-                  <div className="shop-item-achieved">
-                    <Trophy size={12} />
-                    Achieved{achievedCount > 1 ? ` x${achievedCount}` : ''}
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <div className="shop-item-price">
-                  {item.pricePoints.toLocaleString()}
-                </div>
-                <button
-                  onClick={() => handlePurchase(item)}
-                  disabled={!canAfford(item.pricePoints)}
-                  className={`btn ${canAfford(item.pricePoints) ? 'btn-success' : 'btn-secondary'}`}
-                  style={{ 
-                    marginTop: '8px', 
-                    fontSize: '14px', 
-                    padding: '6px 12px',
-                    opacity: canAfford(item.pricePoints) ? 1 : 0.5
-                  }}
-                >
-                  <ShoppingCart size={14} className="btn-icon" />
-                  {canAfford(item.pricePoints) ? 'Buy' : 'Need More'}
-                </button>
-              </div>
+      {/* Shop Categories */}
+      {categories.map(category => {
+        const items = itemsByCategory[category]
+        const categoryIcon = getCategoryIcon(category)
+        
+        return (
+          <div key={category} className="shop-category">
+            <div className="shop-category-header">
+              <span className="shop-category-icon">{categoryIcon}</span>
+              <span className="shop-category-title">{category}</span>
+              <span className="shop-category-count">{items.length} items</span>
             </div>
-          )
-        })}
-      </div>
-
-      {filteredItems.length === 0 && (
-        <div className="card text-center">
-          <div className="text-sm" style={{ color: '#9ca3af' }}>
-            No items found in this category.
+            
+            <div className="shop-items">
+              {items.map(item => {
+                const achievedCount = itemAchievedCounts.get(item.id!) || 0
+                const affordable = canAfford(item.pricePoints)
+                const progress = affordabilityPercent(item.pricePoints)
+                
+                return (
+                  <div 
+                    key={item.id} 
+                    className={`shop-card ${affordable ? 'shop-card-affordable' : ''}`}
+                  >
+                    {achievedCount > 0 && (
+                      <div className="shop-card-badge">
+                        <Trophy size={10} />
+                        {achievedCount > 1 ? `×${achievedCount}` : '✓'}
+                      </div>
+                    )}
+                    
+                    <div className="shop-card-content">
+                      <div className="shop-card-name">{item.name}</div>
+                      
+                      {item.requiresReview && (
+                        <div className="shop-card-tag shop-card-tag-review">
+                          <AlertTriangle size={10} />
+                          Review Required
+                        </div>
+                      )}
+                      
+                      {item.cooldownDays && (
+                        <div className="shop-card-meta">{item.cooldownDays}d cooldown</div>
+                      )}
+                    </div>
+                    
+                    <div className="shop-card-price-section">
+                      <div className={`shop-card-price ${affordable ? 'shop-card-price-affordable' : ''}`}>
+                        {item.pricePoints.toLocaleString()}
+                      </div>
+                      
+                      {!affordable && (
+                        <div className="shop-card-progress">
+                          <div 
+                            className="shop-card-progress-fill" 
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={() => handlePurchase(item)}
+                        disabled={!affordable}
+                        className={`shop-card-btn ${affordable ? 'shop-card-btn-buy' : 'shop-card-btn-locked'}`}
+                      >
+                        {affordable ? (
+                          <>
+                            <Zap size={14} />
+                            Unlock
+                          </>
+                        ) : (
+                          `${progress}%`
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
+        )
+      })}
+
+      {shopItems.length === 0 && (
+        <div className="shop-empty">
+          <Gift size={48} />
+          <div>No rewards configured yet</div>
+          <div className="shop-empty-hint">Import a config to add your personal rewards</div>
         </div>
       )}
 
-      {/* Purchase History */}
+      {/* Recent Purchases */}
       {recentRedemptions.length > 0 && (
-        <div className="card mt-4">
-          <div className="card-title">Recent Purchases</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {recentRedemptions.slice(0, 5).map(redemption => {
-              const item = shopItems.find(i => i.id === redemption.shopItemId)
-              return (
-                <div key={redemption.id} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  padding: '8px 0',
-                  borderBottom: '1px solid #374151'
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{item?.name || 'Unknown Item'}</div>
-                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-                      {new Date(redemption.timestamp).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div style={{ color: '#dc2626', fontWeight: 600 }}>
-                    -{redemption.pricePoints.toLocaleString()}
-                  </div>
+        <div className="shop-history">
+          <div className="shop-history-title">Recent Unlocks</div>
+          {recentRedemptions.slice(0, 3).map(redemption => {
+            const item = shopItems.find(i => i.id === redemption.shopItemId)
+            return (
+              <div key={redemption.id} className="shop-history-item">
+                <div className="shop-history-name">{item?.name || 'Unknown'}</div>
+                <div className="shop-history-date">
+                  {new Date(redemption.timestamp).toLocaleDateString()}
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

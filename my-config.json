@@ -1,0 +1,359 @@
+{
+  "version": 2,
+  "meta": {
+    "ownerName": "James",
+    "timezone": "Europe/London",
+    "currencyName": "Points",
+    "rateUnit": "points_per_minute",
+    "appName": "Life Motivator",
+    "createdAtISO": "2025-12-28T00:00:00Z"
+  },
+
+  "economy": {
+    "sessionRoundingMinutes": 5,
+    "minSessionMinutes": 10,
+    "maxManualBackfillDays": 3,
+    "defaultSessionTags": ["solo"],
+    "antiGaming": {
+      "preventDoubleCountingOverlaps": true,
+      "maxPointsPerDayHardCap": 180000,
+      "suspiciousSessionRules": [
+        { "rule": "single_session_over_minutes", "value": 240, "action": "requires_review" },
+        { "rule": "daily_total_over_minutes", "value": 900, "action": "requires_review" },
+        { "rule": "too_many_sessions", "value": 30, "action": "requires_review" }
+      ],
+      "focusIntegrity": {
+        "deepWorkRequiresTimer": true,
+        "deepWorkMinBlockMinutes": 25,
+        "deepWorkBreakRule": { "workMinutes": 50, "breakMinutes": 10 }
+      }
+    },
+    "diminishingReturns": {
+      "enabled": true,
+      "model": "piecewise",
+      "pieces": [
+        { "upToSoftCapMultiplier": 1.0 },
+        { "overSoftCapMultiplier": 0.6 },
+        { "overHardCapMultiplier": 0.35 }
+      ]
+    },
+    "reviewGates": {
+      "requiresWeeklyReviewForBigPurchases": true,
+      "bigPurchaseThresholdPoints": 200000,
+      "surgeryPurchaseAlwaysRequiresReview": true,
+      "transportAndPropertyAlwaysRequiresReview": true
+    }
+  },
+
+  "domains": [
+    { "id": "startup", "name": "Business (Startup)", "baseRate": 16, "dailySoftCapMinutes": 240, "dailyHardCapMinutes": 360, "isActive": true, "colorHint": "orange" },
+    { "id": "freelance", "name": "Freelancing", "baseRate": 14, "dailySoftCapMinutes": 240, "dailyHardCapMinutes": 360, "isActive": true, "colorHint": "green" },
+    { "id": "education", "name": "Education (Uni / Skill)", "baseRate": 10, "dailySoftCapMinutes": 240, "dailyHardCapMinutes": 360, "isActive": true, "colorHint": "blue" },
+    { "id": "health", "name": "Exercise & Health", "baseRate": 9, "dailySoftCapMinutes": 120, "dailyHardCapMinutes": 180, "isActive": true, "colorHint": "red" },
+    { "id": "domestic", "name": "Domestic (Home Ops)", "baseRate": 7, "dailySoftCapMinutes": 120, "dailyHardCapMinutes": 240, "isActive": true, "colorHint": "slate" },
+    { "id": "food", "name": "Food (Cook / Shop)", "baseRate": 6, "dailySoftCapMinutes": 90, "dailyHardCapMinutes": 180, "isActive": true, "colorHint": "yellow" },
+    { "id": "social", "name": "Relationships & Social", "baseRate": 5, "dailySoftCapMinutes": 120, "dailyHardCapMinutes": 180, "isActive": true, "colorHint": "pink" },
+    { "id": "admin", "name": "Admin & Finance", "baseRate": 8, "dailySoftCapMinutes": 90, "dailyHardCapMinutes": 150, "isActive": true, "colorHint": "purple" },
+    { "id": "creative", "name": "Creativity (Guitar / Writing)", "baseRate": 7, "dailySoftCapMinutes": 90, "dailyHardCapMinutes": 150, "isActive": true, "colorHint": "teal" }
+  ],
+
+  "activityLibrary": [
+    {
+      "id": "mb_product",
+      "domainId": "startup",
+      "name": "Morning Buddy: Product Development",
+      "tags": ["deepwork", "builder"],
+      "rateOverride": null,
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "What shipped or moved forward?"
+    },
+    {
+      "id": "mb_marketing",
+      "domainId": "startup",
+      "name": "Morning Buddy: Marketing & Growth",
+      "tags": ["growth", "distribution"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "What channel + what result?"
+    },
+    {
+      "id": "mb_strategy",
+      "domainId": "startup",
+      "name": "Startup Strategy (High Leverage)",
+      "tags": ["planning", "deepwork"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "What decision got clearer?"
+    },
+    {
+      "id": "freelance_client",
+      "domainId": "freelance",
+      "name": "Client Delivery (Billable)",
+      "tags": ["money", "deepwork"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "What deliverable progressed?"
+    },
+    {
+      "id": "freelance_outreach",
+      "domainId": "freelance",
+      "name": "Outreach / Proposals / Demos",
+      "tags": ["pipeline", "sales"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "Who did you contact + what was sent?"
+    },
+    {
+      "id": "education_coursework",
+      "domainId": "education",
+      "name": "Coursework (Assignments / Revision)",
+      "tags": ["deepwork", "grades"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "What section / problem set?"
+    },
+    {
+      "id": "education_research",
+      "domainId": "education",
+      "name": "Reading / Research",
+      "tags": ["learning"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 25,
+      "notesPrompt": "What did you learn?"
+    },
+    {
+      "id": "gym_strength",
+      "domainId": "health",
+      "name": "Gym (Strength)",
+      "tags": ["health", "strength"],
+      "deepWorkEligible": false,
+      "minBlockMinutes": 30,
+      "notesPrompt": "Main lifts + sets?"
+    },
+    {
+      "id": "cardio_walk",
+      "domainId": "health",
+      "name": "Walking / Cardio",
+      "tags": ["health", "recovery"],
+      "deepWorkEligible": false,
+      "minBlockMinutes": 20,
+      "notesPrompt": "Distance/time?"
+    },
+    {
+      "id": "clean_reset",
+      "domainId": "domestic",
+      "name": "Clean Reset (15–45 mins)",
+      "tags": ["ops", "friction_reduction"],
+      "deepWorkEligible": false,
+      "minBlockMinutes": 15,
+      "notesPrompt": "What area did you reset?"
+    },
+    {
+      "id": "meal_prep",
+      "domainId": "food",
+      "name": "Cook / Meal Prep",
+      "tags": ["health", "ops"],
+      "deepWorkEligible": false,
+      "minBlockMinutes": 20,
+      "notesPrompt": "What did you cook?"
+    },
+    {
+      "id": "relationship_quality",
+      "domainId": "social",
+      "name": "Quality Time (Present, No Phone)",
+      "tags": ["relationships"],
+      "deepWorkEligible": false,
+      "minBlockMinutes": 30,
+      "notesPrompt": "Who + what did you do?"
+    },
+    {
+      "id": "admin_money",
+      "domainId": "admin",
+      "name": "Finance Admin (Budget / Invoices / Planning)",
+      "tags": ["money", "ops"],
+      "deepWorkEligible": true,
+      "minBlockMinutes": 20,
+      "notesPrompt": "What got cleaned up?"
+    },
+    {
+      "id": "guitar_practice",
+      "domainId": "creative",
+      "name": "Guitar Practice",
+      "tags": ["creative", "skill"],
+      "deepWorkEligible": false,
+      "minBlockMinutes": 15,
+      "notesPrompt": "What did you practice?"
+    }
+  ],
+
+  "multipliers": {
+    "enabled": true,
+    "applyTo": "earned_points_only",
+    "lifetimeMinutesTrackedPerActivity": true,
+    "tiers": [
+      { "name": "Bronze", "atMinutes": 0, "multiplier": 1.0 },
+      { "name": "Iron", "atMinutes": 3000, "multiplier": 1.05 },
+      { "name": "Steel", "atMinutes": 12000, "multiplier": 1.12 },
+      { "name": "Silver", "atMinutes": 30000, "multiplier": 1.25 },
+      { "name": "Gold", "atMinutes": 60000, "multiplier": 1.45 },
+      { "name": "Platinum", "atMinutes": 120000, "multiplier": 1.7 },
+      { "name": "Diamond", "atMinutes": 240000, "multiplier": 2.0 }
+    ],
+    "domainMasteryBonus": [
+      { "domainId": "startup", "atMinutes": 60000, "bonusMultiplier": 0.05 },
+      { "domainId": "freelance", "atMinutes": 60000, "bonusMultiplier": 0.05 },
+      { "domainId": "education", "atMinutes": 60000, "bonusMultiplier": 0.03 }
+    ],
+    "deepWorkQualityBonus": {
+      "enabled": true,
+      "bonusRules": [
+        { "rule": "complete_deepwork_block", "minMinutes": 50, "bonusMultiplier": 0.08 },
+        { "rule": "two_deepwork_blocks_same_day", "minMinutesEach": 50, "bonusMultiplier": 0.12 }
+      ],
+      "maxDailyBonusMultiplier": 0.25
+    }
+  },
+
+  "bonuses": {
+    "streaks": [
+      { "id": "daily_checkin", "title": "Daily Check-in", "points": 1200, "cooldownHours": 20 },
+      { "id": "startup_streak", "title": "Startup 5-Day Streak", "points": 9000, "requires": { "domainMinutesInDay": [{ "domainId": "startup", "minMinutes": 45 }] }, "streakDays": 5 },
+      { "id": "freelance_streak", "title": "Freelance 5-Day Streak", "points": 8000, "requires": { "domainMinutesInDay": [{ "domainId": "freelance", "minMinutes": 45 }] }, "streakDays": 5 },
+      { "id": "health_streak", "title": "Health 7-Day Streak", "points": 7000, "requires": { "domainMinutesInDay": [{ "domainId": "health", "minMinutes": 20 }] }, "streakDays": 7 }
+    ],
+    "weeklyReview": { "enabled": true, "title": "Weekly Review Complete", "points": 15000, "requiresNotes": true },
+    "houseResetBonus": { "enabled": true, "title": "Full Flat Reset", "points": 6000, "requiresActivities": ["clean_reset"], "minTotalMinutes": 45 }
+  },
+
+  "bonusMilestones": [
+    { "title": "First £1k freelance month (logged with evidence)", "points": 50000, "requiresReview": true },
+    { "title": "First retainer client signed", "points": 60000, "requiresReview": true },
+    { "title": "£3k/month freelancing run-rate reached", "points": 120000, "requiresReview": true },
+    { "title": "Quit council work (employment change logged)", "points": 250000, "requiresReview": true },
+    { "title": "Meet girlfriend’s parents (planned + happened)", "points": 80000, "requiresReview": true },
+    { "title": "Pitch deck + 10 investor/outreach sends completed", "points": 45000, "requiresReview": false },
+    { "title": "100 hours logged in Startup domain", "points": 25000, "requiresReview": false },
+    { "title": "500 hours logged in Startup domain", "points": 90000, "requiresReview": false },
+    { "title": "1000 hours logged in Freelancing domain", "points": 150000, "requiresReview": true }
+  ],
+
+  "shopRules": {
+    "pointsArePermissionNotMoney": true,
+    "purchaseFlow": ["select_item", "confirm_requirements", "optional_review", "redeem", "log_real_world_purchase_or_booking"],
+    "evidenceTypes": ["receipt", "booking_confirmation", "photo", "note"],
+    "cooldownsEnforced": true,
+    "debtAllowed": false
+  },
+
+  "shopItems": [
+    { "category": "Relaxation", "name": "Coffee / Treat", "pricePoints": 2500, "cooldownDays": 0, "requiresReview": false, "isActive": true },
+    { "category": "Relaxation", "name": "Takeout / Delivery", "pricePoints": 9000, "cooldownDays": 1, "requiresReview": false, "isActive": true },
+    { "category": "Relaxation", "name": "Cinema Trip", "pricePoints": 7000, "cooldownDays": 2, "requiresReview": false, "isActive": true },
+    { "category": "Relaxation", "name": "Restaurant Date", "pricePoints": 22000, "cooldownDays": 7, "requiresReview": false, "isActive": true },
+    { "category": "Relaxation", "name": "Spa Day / Massage", "pricePoints": 42000, "cooldownDays": 14, "requiresReview": false, "isActive": true },
+
+    { "category": "Equipment", "name": "Blender (good one)", "pricePoints": 45000, "cooldownDays": 30, "requiresReview": true, "isActive": true },
+    { "category": "Equipment", "name": "Mechanical Keyboard", "pricePoints": 55000, "cooldownDays": 60, "requiresReview": true, "isActive": true },
+    { "category": "Equipment", "name": "Herman Miller Chair", "pricePoints": 280000, "cooldownDays": 180, "requiresReview": true, "isActive": true },
+
+    { "category": "Tech", "name": "AirPods", "pricePoints": 30000, "cooldownDays": 60, "requiresReview": true, "isActive": true },
+    { "category": "Tech", "name": "Apple Watch", "pricePoints": 90000, "cooldownDays": 180, "requiresReview": true, "isActive": true },
+    { "category": "Tech", "name": "iPad", "pricePoints": 120000, "cooldownDays": 180, "requiresReview": true, "isActive": true },
+    { "category": "Tech", "name": "MacBook Air", "pricePoints": 280000, "cooldownDays": 365, "requiresReview": true, "isActive": true },
+    { "category": "Tech", "name": "MacBook Pro", "pricePoints": 520000, "cooldownDays": 365, "requiresReview": true, "isActive": true },
+
+    { "category": "Experiences", "name": "Day Trip", "pricePoints": 60000, "cooldownDays": 30, "requiresReview": true, "isActive": true },
+    { "category": "Experiences", "name": "Weekend Away", "pricePoints": 180000, "cooldownDays": 120, "requiresReview": true, "isActive": true },
+    { "category": "Experiences", "name": "Holiday (proper reset)", "pricePoints": 650000, "cooldownDays": 365, "requiresReview": true, "isActive": true },
+
+    {
+      "category": "Surgeries",
+      "name": "Tongue-tie assessment / treatment",
+      "pricePoints": 220000,
+      "cooldownDays": 365,
+      "requiresReview": true,
+      "requirements": ["medical_consult_logged"],
+      "isActive": true
+    },
+    {
+      "category": "Surgeries",
+      "name": "Laser eye surgery assessment / procedure",
+      "pricePoints": 800000,
+      "cooldownDays": 730,
+      "requiresReview": true,
+      "requirements": ["medical_consult_logged", "savings_check_logged"],
+      "isActive": true
+    },
+    {
+      "category": "Surgeries",
+      "name": "Hair transplant (if still desired)",
+      "pricePoints": 1600000,
+      "cooldownDays": 1095,
+      "requiresReview": true,
+      "requirements": ["medical_consult_logged", "savings_check_logged"],
+      "isActive": true
+    },
+    {
+      "category": "Surgeries",
+      "name": "Feet/orthotics pathway (assessment + solution)",
+      "pricePoints": 520000,
+      "cooldownDays": 730,
+      "requiresReview": true,
+      "requirements": ["medical_consult_logged"],
+      "isActive": true
+    },
+    {
+      "category": "Surgeries",
+      "name": "Height procedure (extreme, safety gate)",
+      "pricePoints": 9000000,
+      "cooldownDays": 3650,
+      "requiresReview": true,
+      "requirements": ["specialist_consult_logged", "cooling_off_90_days", "savings_check_logged"],
+      "isActive": false
+    },
+
+    { "category": "Transport", "name": "Basic Car (e.g., Volkswagen)", "pricePoints": 2200000, "cooldownDays": 730, "requiresReview": true, "requirements": ["insurance_cost_plan_logged"], "isActive": true },
+    { "category": "Transport", "name": "Advanced Car (e.g., Range Rover)", "pricePoints": 7000000, "cooldownDays": 1095, "requiresReview": true, "requirements": ["income_run_rate_check"], "isActive": true },
+    { "category": "Transport", "name": "Luxury Car (e.g., Porsche)", "pricePoints": 12000000, "cooldownDays": 1460, "requiresReview": true, "requirements": ["income_run_rate_check"], "isActive": true },
+    { "category": "Transport", "name": "Super Luxury (e.g., Ferrari)", "pricePoints": 40000000, "cooldownDays": 1825, "requiresReview": true, "requirements": ["income_run_rate_check", "savings_check_logged"], "isActive": true },
+    { "category": "Transport", "name": "Boat", "pricePoints": 55000000, "cooldownDays": 1825, "requiresReview": true, "requirements": ["income_run_rate_check", "maintenance_plan_logged"], "isActive": true },
+    { "category": "Transport", "name": "Plane (long-term absurd tier)", "pricePoints": 250000000, "cooldownDays": 3650, "requiresReview": true, "requirements": ["income_run_rate_check", "maintenance_plan_logged"], "isActive": false },
+
+    { "category": "Property", "name": "Small Property (2-room flat deposit)", "pricePoints": 6500000, "cooldownDays": 3650, "requiresReview": true, "requirements": ["deposit_plan_logged"], "isActive": true },
+    { "category": "Property", "name": "Medium Property (5 rooms deposit)", "pricePoints": 18000000, "cooldownDays": 3650, "requiresReview": true, "requirements": ["deposit_plan_logged", "income_run_rate_check"], "isActive": true },
+    { "category": "Property", "name": "Large Property (10+ rooms deposit)", "pricePoints": 65000000, "cooldownDays": 3650, "requiresReview": true, "requirements": ["deposit_plan_logged", "income_run_rate_check"], "isActive": true },
+    { "category": "Property", "name": "Deluxe (£2M+ mansion pathway)", "pricePoints": 160000000, "cooldownDays": 3650, "requiresReview": true, "requirements": ["deposit_plan_logged", "income_run_rate_check", "cooling_off_90_days"], "isActive": true }
+  ],
+
+  "requirementsLibrary": [
+    { "id": "weekly_review_done", "description": "Weekly review completed in-app (notes required)." },
+    { "id": "medical_consult_logged", "description": "Medical consultation logged (date + provider + outcome)." },
+    { "id": "specialist_consult_logged", "description": "Specialist consult logged (for high-risk procedures)." },
+    { "id": "savings_check_logged", "description": "Savings check logged (proof you can actually afford it)." },
+    { "id": "insurance_cost_plan_logged", "description": "Plan shows insurance + running costs are affordable." },
+    { "id": "income_run_rate_check", "description": "Run-rate check: income supports ongoing cost comfortably." },
+    { "id": "maintenance_plan_logged", "description": "Maintenance/storage plan exists for ongoing ownership." },
+    { "id": "deposit_plan_logged", "description": "Deposit plan exists (amount, timeline, mechanism)." },
+    { "id": "cooling_off_90_days", "description": "90-day cooling off period between intent + purchase." }
+  ],
+
+  "ui": {
+    "navigation": { "type": "tabs", "tabs": ["Check-in", "Track", "Quests", "Shop", "Review", "Stats", "Settings"] },
+    "checkin": {
+      "prompts": [
+        "What is the ONE move that makes future you stronger?",
+        "What are you avoiding?",
+        "What will you finish today?"
+      ],
+      "quickButtons": [
+        { "label": "Start Deep Work (50m)", "activityId": "freelance_client", "minutes": 50 },
+        { "label": "Outreach Sprint (25m)", "activityId": "freelance_outreach", "minutes": 25 },
+        { "label": "Startup Sprint (50m)", "activityId": "mb_product", "minutes": 50 },
+        { "label": "Clean Reset (15m)", "activityId": "clean_reset", "minutes": 15 }
+      ]
+    },
+    "shop": { "showCooldowns": true, "showRequirements": true, "requireEvidenceForRedeem": true },
+    "review": { "weeklyReviewDay": "Sunday", "weeklyReviewDefaultTimeLocal": "20:30" }
+  }
+}

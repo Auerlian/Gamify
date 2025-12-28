@@ -372,30 +372,41 @@ export default function TodayTab() {
         )}
       </div>
 
-      {/* Domain Selection - Horizontal chips */}
+      {/* Domain Selection - Wrapping grid, collapses when selected */}
       {!isSessionActive && (
         <div className="selection-section">
           <div className="selection-label">Domain</div>
-          <div className="chips-scroll">
-            {domains.map(domain => (
-              <button
-                key={domain.id}
-                onClick={() => setTimer(prev => ({ ...prev, selectedDomainId: domain.id!, selectedActivityId: null }))}
-                className={`chip ${timer.selectedDomainId === domain.id ? 'chip-selected' : ''}`}
-              >
-                {domain.name}
-                <span className="chip-meta">Lv{domain.level}</span>
-              </button>
-            ))}
-          </div>
+          {!timer.selectedDomainId ? (
+            <div className="chips-grid">
+              {domains.map(domain => (
+                <button
+                  key={domain.id}
+                  onClick={() => setTimer(prev => ({ ...prev, selectedDomainId: domain.id!, selectedActivityId: null }))}
+                  className="chip"
+                >
+                  {domain.name}
+                  <span className="chip-meta">Lv{domain.level}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button
+              onClick={() => setTimer(prev => ({ ...prev, selectedDomainId: null, selectedActivityId: null }))}
+              className="selected-domain-chip"
+            >
+              {selectedDomain?.name}
+              <span className="chip-meta">Lv{selectedDomain?.level}</span>
+              <span className="chip-clear">✕</span>
+            </button>
+          )}
         </div>
       )}
 
-      {/* Activity Selection - Horizontal chips */}
+      {/* Activity Selection - Shows after domain selected */}
       {!isSessionActive && timer.selectedDomainId && activities.length > 0 && (
         <div className="selection-section">
           <div className="selection-label">Activity <span className="optional-tag">optional</span></div>
-          <div className="chips-scroll">
+          <div className="chips-grid">
             {activities.map(activity => (
               <button
                 key={activity.id}
