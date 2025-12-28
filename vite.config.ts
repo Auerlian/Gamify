@@ -15,7 +15,7 @@ export default defineConfig({
         theme_color: '#1f2937',
         background_color: '#111827',
         display: 'standalone',
-        start_url: '/',
+        start_url: '/Gamify/',
         icons: [
           {
             src: 'icon-192.png',
@@ -47,5 +47,5 @@ export default defineConfig({
       }
     })
   ],
-  base: './'
+  base: '/Gamify/'
 })
