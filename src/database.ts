@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { 
-  Domain, Activity, Session, Bonus, ShopItem, Redemption, LedgerEntry,
+  Domain, Activity, Session, Bonus, ShopItem, Redemption, LedgerEntry, PersonalConfig,
   DEFAULT_DOMAINS, DEFAULT_SHOP_ITEMS, LEVEL_THRESHOLDS, MULTIPLIERS
 } from './types';
 
@@ -30,65 +30,99 @@ class LifeMotivatorDB extends Dexie {
   }
 
   async populateDefaults() {
-    console.log('Populating default data...')
+    console.log('Populating with placeholder data...')
+    console.log('Import your personal config from Settings to customize!')
     
-    // Create default domains
-    console.log('Creating default domains:', DEFAULT_DOMAINS)
-    const domainPromises = DEFAULT_DOMAINS.map(domain => 
-      this.domains.add({
+    // Create placeholder domains
+    for (const domain of DEFAULT_DOMAINS) {
+      await this.domains.add({
         ...domain,
         lifetimeMinutes: 0,
         level: 1,
         multiplier: 1.0
-      })
-    );
-    
-    await Promise.all(domainPromises);
-    console.log('Default domains created')
-
-    // Create default shop items
-    console.log('Creating default shop items:', DEFAULT_SHOP_ITEMS.length, 'items')
-    const shopPromises = DEFAULT_SHOP_ITEMS.map(item => 
-      this.shopItems.add(item)
-    );
-    
-    await Promise.all(shopPromises);
-    console.log('Default shop items created')
-
-    // Create default activities for each domain
-    const domains = await this.domains.toArray();
-    console.log('Creating activities for domains:', domains)
-    const activityPromises: Promise<number>[] = [];
-
-    domains.forEach(domain => {
-      const defaultActivities = getDefaultActivitiesForDomain(domain.name);
-      defaultActivities.forEach(activityName => {
-        activityPromises.push(
-          this.activities.add({
-            domainId: domain.id!,
-            name: activityName,
-            isActive: true
-          })
-        );
       });
-    });
+    }
 
-    await Promise.all(activityPromises);
-    console.log('Default activities created')
+    // Create placeholder shop items
+    for (const item of DEFAULT_SHOP_ITEMS) {
+      await this.shopItems.add(item);
+    }
+
+    // Create placeholder activities
+    const domains = await this.domains.toArray();
+    for (const domain of domains) {
+      const defaultActivities = ['Task 1', 'Task 2', 'Task 3'];
+      for (const activityName of defaultActivities) {
+        await this.activities.add({
+          domainId: domain.id!,
+          name: activityName,
+          isActive: true
+        });
+      }
+    }
+    
+    console.log('Placeholder data created')
   }
-}
 
-function getDefaultActivitiesForDomain(domainName: string): string[] {
-  const activityMap: Record<string, string[]> = {
-    'Business': ['Morning Buddy work', 'Strategy planning', 'Product development', 'Marketing'],
-    'Freelancing': ['Client outreach', 'Build demo', 'Delivery work', 'Portfolio update'],
-    'Education': ['Lecture', 'Assignment', 'Revision', 'Research'],
-    'Exercise': ['Gym session', 'Cardio', 'Mobility work', 'Sports'],
-    'Domestic': ['Kitchen reset', 'Laundry', 'Room tidy', 'Admin tasks'],
-    'Food': ['Meal prep', 'Cooking', 'Nutrition planning', 'Shopping']
-  };
-  
-  return activityMap[domainName] || ['General work'];
+  // Import personal configuration
+  async importPersonalConfig(config: PersonalConfig): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log('Importing personal config...')
+      
+      // Clear existing domains, activities, and shop items (but keep sessions/ledger)
+      await this.domains.clear();
+      await this.activities.clear();
+      await this.shopItems.clear();
+      
+      // Import domains
+      const domainIdMap = new Map<string, number>();
+      for (const domain of config.domains) {
+        const id = await this.domains.add({
+          ...domain,
+          lifetimeMinutes: 0,
+          level: 1,
+          multiplier: 1.0
+        });
+        domainIdMap.set(domain.name, id);
+      }
+      console.log(`Imported ${config.domains.length} domains`)
+      
+      // Import activities
+      for (const activityGroup of config.activities) {
+        const domainId = domainIdMap.get(activityGroup.domainName);
+        if (domainId) {
+          for (const activityName of activityGroup.activities) {
+            await this.activities.add({
+              domainId,
+              name: activityName,
+              isActive: true
+            });
+          }
+        }
+      }
+      console.log(`Imported activities for ${config.activities.length} domains`)
+      
+      // Import shop items
+      for (const item of config.shopItems) {
+        await this.shopItems.add(item);
+      }
+      console.log(`Imported ${config.shopItems.length} shop items`)
+      
+      // Store config version
+      localStorage.setItem('lifeMotivatorConfigVersion', String(config.version));
+      localStorage.setItem('lifeMotivatorConfigImported', 'true');
+      
+      return { success: true, message: `Successfully imported: ${config.domains.length} domains, ${config.shopItems.length} shop items` };
+    } catch (error) {
+      console.error('Failed to import config:', error);
+      return { success: false, message: `Import failed: ${error}` };
+    }
+  }
+
+  // Check if personal config has been imported
+  hasPersonalConfig(): boolean {
+    return localStorage.getItem('lifeMotivatorConfigImported') === 'true';
+  }
 }
 
 export const db = new LifeMotivatorDB();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Download, Upload, Trash2, Plus, Settings, AlertTriangle } from 'lucide-react'
+import { Download, Upload, Trash2, Plus, Settings, AlertTriangle, FileJson } from 'lucide-react'
 import { db } from '../database'
-import { Domain, DEFAULT_BONUSES } from '../types'
+import { Domain, DEFAULT_BONUSES, PersonalConfig } from '../types'
 
 export default function SettingsTab() {
   const [domains, setDomains] = useState<Domain[]>([])
@@ -10,10 +10,12 @@ export default function SettingsTab() {
   const [bonusPoints, setBonusPoints] = useState('')
   const [bonusNotes, setBonusNotes] = useState('')
   const [debugInfo, setDebugInfo] = useState<string>('')
+  const [configImported, setConfigImported] = useState(false)
 
   useEffect(() => {
     loadDomains()
     loadDebugInfo()
+    setConfigImported(db.hasPersonalConfig())
   }, [])
 
   const loadDebugInfo = async () => {
@@ -31,26 +33,49 @@ export default function SettingsTab() {
     }
   }
 
-  const forceReinitializeDatabase = async () => {
-    if (!confirm('This will delete and recreate the database. Are you sure?')) return
-    
-    try {
-      await db.delete()
-      await db.open()
-      await loadDomains()
-      await loadDebugInfo()
-      alert('Database reinitialized successfully!')
-    } catch (error) {
-      console.error('Failed to reinitialize database:', error)
-      alert('Failed to reinitialize database')
-    }
-  }
-
   const loadDomains = async () => {
     const domainsData = await db.domains.toArray()
     setDomains(domainsData)
   }
 
+  // Import personal config
+  const importPersonalConfig = async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      try {
+        const text = await file.text()
+        const config: PersonalConfig = JSON.parse(text)
+        
+        if (!config.version || !config.domains || !config.shopItems) {
+          throw new Error('Invalid config file format')
+        }
+        
+        if (!confirm(`This will replace your current domains and shop items with:\n• ${config.domains.length} domains\n• ${config.shopItems.length} shop items\n\nYour session history will be preserved. Continue?`)) {
+          return
+        }
+        
+        const result = await db.importPersonalConfig(config)
+        
+        if (result.success) {
+          alert(result.message)
+          window.location.reload()
+        } else {
+          alert(result.message)
+        }
+      } catch (error) {
+        console.error('Config import failed:', error)
+        alert(`Import failed: ${error}`)
+      }
+    }
+    input.click()
+  }
+
+  // Export full data backup
   const exportData = async () => {
     try {
       const [domains, activities, sessions, bonuses, shopItems, redemptions, ledger] = await Promise.all([
@@ -92,6 +117,7 @@ export default function SettingsTab() {
     }
   }
 
+  // Import full data backup
   const importData = () => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -135,8 +161,9 @@ export default function SettingsTab() {
           db.ledger.bulkAdd(data.ledger || [])
         ])
 
+        localStorage.setItem('lifeMotivatorConfigImported', 'true')
         alert('Data imported successfully!')
-        loadDomains()
+        window.location.reload()
       } catch (error) {
         console.error('Import failed:', error)
         alert('Import failed. Please check the file format and try again.')
@@ -157,21 +184,11 @@ export default function SettingsTab() {
     }
 
     try {
-      await Promise.all([
-        db.domains.clear(),
-        db.activities.clear(),
-        db.sessions.clear(),
-        db.bonuses.clear(),
-        db.shopItems.clear(),
-        db.redemptions.clear(),
-        db.ledger.clear()
-      ])
-
-      // Repopulate with defaults
-      await db.open() // This will trigger populateDefaults
-
-      alert('All data has been reset to defaults.')
-      loadDomains()
+      await db.delete()
+      localStorage.removeItem('lifeMotivatorConfigImported')
+      localStorage.removeItem('lifeMotivatorConfigVersion')
+      alert('All data has been reset. The app will now reload.')
+      window.location.reload()
     } catch (error) {
       console.error('Reset failed:', error)
       alert('Reset failed. Please try again.')
@@ -193,7 +210,6 @@ export default function SettingsTab() {
     try {
       const timestamp = Date.now()
       
-      // Add bonus
       const bonusId = await db.bonuses.add({
         timestamp,
         title: bonusTitle.trim(),
@@ -201,7 +217,6 @@ export default function SettingsTab() {
         notes: bonusNotes.trim() || undefined
       })
 
-      // Add to ledger
       await db.ledger.add({
         timestamp,
         type: 'earn_bonus',
@@ -210,7 +225,6 @@ export default function SettingsTab() {
         description: `Bonus: ${bonusTitle.trim()}`
       })
 
-      // Reset form
       setBonusTitle('')
       setBonusPoints('')
       setBonusNotes('')
@@ -235,6 +249,34 @@ export default function SettingsTab() {
   return (
     <div className="page fade-in">
       <h1 className="page-title">Settings</h1>
+
+      {/* Personal Config Import */}
+      <div className="card" style={{ borderColor: configImported ? '#059669' : '#f59e0b' }}>
+        <div className="card-title flex items-center gap-2">
+          <FileJson size={20} />
+          Personal Configuration
+        </div>
+        <div className="text-sm mb-4" style={{ color: '#9ca3af' }}>
+          {configImported 
+            ? '✅ Personal config imported. Your custom domains and shop items are active.'
+            : '⚠️ Using placeholder data. Import your personal config to customize.'}
+        </div>
+        <div className="flex flex-col gap-3">
+          <button onClick={importPersonalConfig} className="btn btn-primary">
+            <Upload className="btn-icon" size={16} />
+            Import Personal Config
+          </button>
+          <a 
+            href="/sample-config.json" 
+            download="sample-config.json"
+            className="btn btn-secondary"
+            style={{ textDecoration: 'none' }}
+          >
+            <Download className="btn-icon" size={16} />
+            Download Sample Config
+          </a>
+        </div>
+      </div>
 
       {/* Quick Bonus */}
       <div className="card">
@@ -349,20 +391,28 @@ export default function SettingsTab() {
       <div className="card">
         <div className="card-title flex items-center gap-2">
           <Download size={20} />
-          Data Management
+          Data Backup
         </div>
         <div className="text-sm mb-4" style={{ color: '#9ca3af' }}>
-          Export your data for backup or import from a previous backup.
+          Export your complete data (sessions, points, progress) for backup, or import from a previous backup.
         </div>
         <div className="flex flex-col gap-3">
           <button onClick={exportData} className="btn btn-primary">
             <Download className="btn-icon" size={16} />
-            Export Data
+            Export Full Backup
           </button>
           <button onClick={importData} className="btn btn-secondary">
             <Upload className="btn-icon" size={16} />
-            Import Data
+            Import Full Backup
           </button>
+        </div>
+      </div>
+
+      {/* Debug Info */}
+      <div className="card">
+        <div className="card-title">Debug Information</div>
+        <div className="text-sm mb-4" style={{ color: '#9ca3af' }}>
+          Database status: {debugInfo}
         </div>
       </div>
 
@@ -378,17 +428,6 @@ export default function SettingsTab() {
         <button onClick={resetAllData} className="btn btn-danger">
           <Trash2 className="btn-icon" size={16} />
           Reset All Data
-        </button>
-      </div>
-
-      {/* Debug Info */}
-      <div className="card">
-        <div className="card-title">Debug Information</div>
-        <div className="text-sm mb-4" style={{ color: '#9ca3af' }}>
-          Database status: {debugInfo}
-        </div>
-        <button onClick={forceReinitializeDatabase} className="btn btn-secondary">
-          Reinitialize Database
         </button>
       </div>
 

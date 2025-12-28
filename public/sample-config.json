@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "domains": [
+    { "name": "Work", "baseRate": 12, "dailySoftCapMinutes": 480, "isActive": true },
+    { "name": "Learning", "baseRate": 10, "dailySoftCapMinutes": 240, "isActive": true },
+    { "name": "Health", "baseRate": 8, "dailySoftCapMinutes": 120, "isActive": true },
+    { "name": "Personal", "baseRate": 6, "dailySoftCapMinutes": 180, "isActive": true }
+  ],
+  "activities": [
+    { "domainName": "Work", "activities": ["Deep work", "Meetings", "Admin", "Planning"] },
+    { "domainName": "Learning", "activities": ["Reading", "Courses", "Practice", "Research"] },
+    { "domainName": "Health", "activities": ["Exercise", "Meditation", "Meal prep"] },
+    { "domainName": "Personal", "activities": ["Hobbies", "Social", "Errands"] }
+  ],
+  "shopItems": [
+    { "category": "Treats", "name": "Coffee", "pricePoints": 2000, "requiresReview": false, "isActive": true },
+    { "category": "Treats", "name": "Takeout", "pricePoints": 8000, "requiresReview": false, "isActive": true },
+    { "category": "Treats", "name": "Nice meal out", "pricePoints": 20000, "cooldownDays": 7, "requiresReview": false, "isActive": true },
+    { "category": "Entertainment", "name": "Movie", "pricePoints": 5000, "requiresReview": false, "isActive": true },
+    { "category": "Entertainment", "name": "Game", "pricePoints": 15000, "requiresReview": false, "isActive": true },
+    { "category": "Big Purchases", "name": "Gadget", "pricePoints": 50000, "requiresReview": true, "isActive": true },
+    { "category": "Big Purchases", "name": "Major purchase", "pricePoints": 200000, "requiresReview": true, "isActive": true },
+    { "category": "Experiences", "name": "Day out", "pricePoints": 30000, "requiresReview": false, "isActive": true },
+    { "category": "Experiences", "name": "Weekend trip", "pricePoints": 100000, "requiresReview": true, "isActive": true }
+  ],
+  "bonusMilestones": [
+    { "title": "First week complete", "points": 5000 },
+    { "title": "30-day streak", "points": 25000 },
+    { "title": "Major goal achieved", "points": 50000 },
+    { "title": "100 hours in a domain", "points": 30000 }
+  ]
+}
