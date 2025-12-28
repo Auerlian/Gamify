@@ -222,6 +222,13 @@ export default function ShopTab() {
                 {item.cooldownDays && (
                   <div className="shop-item-cost">Cooldown: {item.cooldownDays} days</div>
                 )}
+                {item.requirements && item.requirements.length > 0 && (
+                  <div className="shop-item-requirements">
+                    <span style={{ color: '#f59e0b', fontSize: '11px' }}>
+                      Requires: {item.requirements.join(', ')}
+                    </span>
+                  </div>
+                )}
                 {achievedCount > 0 && (
                   <div className="shop-item-achieved">
                     <Trophy size={12} />

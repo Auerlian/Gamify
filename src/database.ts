@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import { 
-  Domain, Activity, Session, Bonus, ShopItem, Redemption, LedgerEntry, PersonalConfig,
+  Domain, Activity, Session, Bonus, ShopItem, Redemption, LedgerEntry, 
+  PersonalConfig, PersonalConfigV1, PersonalConfigV2,
   DEFAULT_DOMAINS, DEFAULT_SHOP_ITEMS, LEVEL_THRESHOLDS, MULTIPLIERS
 } from './types';
 
@@ -64,59 +65,167 @@ class LifeMotivatorDB extends Dexie {
     console.log('Placeholder data created')
   }
 
-  // Import personal configuration
+  // Import personal configuration (supports v1 and v2 formats)
   async importPersonalConfig(config: PersonalConfig): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('Importing personal config...')
+      console.log('Importing personal config version:', config.version);
       
       // Clear existing domains, activities, and shop items (but keep sessions/ledger)
       await this.domains.clear();
       await this.activities.clear();
       await this.shopItems.clear();
       
-      // Import domains
-      const domainIdMap = new Map<string, number>();
-      for (const domain of config.domains) {
-        const id = await this.domains.add({
-          ...domain,
-          lifetimeMinutes: 0,
-          level: 1,
-          multiplier: 1.0
-        });
-        domainIdMap.set(domain.name, id);
+      if (config.version === 2) {
+        return await this.importV2Config(config as PersonalConfigV2);
+      } else {
+        return await this.importV1Config(config as PersonalConfigV1);
       }
-      console.log(`Imported ${config.domains.length} domains`)
-      
-      // Import activities
-      for (const activityGroup of config.activities) {
-        const domainId = domainIdMap.get(activityGroup.domainName);
-        if (domainId) {
-          for (const activityName of activityGroup.activities) {
-            await this.activities.add({
-              domainId,
-              name: activityName,
-              isActive: true
-            });
-          }
-        }
-      }
-      console.log(`Imported activities for ${config.activities.length} domains`)
-      
-      // Import shop items
-      for (const item of config.shopItems) {
-        await this.shopItems.add(item);
-      }
-      console.log(`Imported ${config.shopItems.length} shop items`)
-      
-      // Store config version
-      localStorage.setItem('lifeMotivatorConfigVersion', String(config.version));
-      localStorage.setItem('lifeMotivatorConfigImported', 'true');
-      
-      return { success: true, message: `Successfully imported: ${config.domains.length} domains, ${config.shopItems.length} shop items` };
     } catch (error) {
       console.error('Failed to import config:', error);
       return { success: false, message: `Import failed: ${error}` };
     }
+  }
+
+  // Import v1 (simple) config format
+  private async importV1Config(config: PersonalConfigV1): Promise<{ success: boolean; message: string }> {
+    const domainIdMap = new Map<string, number>();
+    
+    for (const domain of config.domains) {
+      const id = await this.domains.add({
+        ...domain,
+        lifetimeMinutes: 0,
+        level: 1,
+        multiplier: 1.0
+      });
+      domainIdMap.set(domain.name, id);
+    }
+    console.log(`Imported ${config.domains.length} domains (v1)`);
+    
+    for (const activityGroup of config.activities) {
+      const domainId = domainIdMap.get(activityGroup.domainName);
+      if (domainId) {
+        for (const activityName of activityGroup.activities) {
+          await this.activities.add({
+            domainId,
+            name: activityName,
+            isActive: true
+          });
+        }
+      }
+    }
+    console.log(`Imported activities for ${config.activities.length} domains (v1)`);
+    
+    for (const item of config.shopItems) {
+      await this.shopItems.add(item);
+    }
+    console.log(`Imported ${config.shopItems.length} shop items (v1)`);
+    
+    localStorage.setItem('lifeMotivatorConfigVersion', '1');
+    localStorage.setItem('lifeMotivatorConfigImported', 'true');
+    
+    return { 
+      success: true, 
+      message: `Successfully imported: ${config.domains.length} domains, ${config.shopItems.length} shop items` 
+    };
+  }
+
+  // Import v2 (detailed) config format
+  private async importV2Config(config: PersonalConfigV2): Promise<{ success: boolean; message: string }> {
+    // Map configId -> database id for domains
+    const domainIdMap = new Map<string, number>();
+    
+    // Import domains with their configId
+    for (const domain of config.domains) {
+      const id = await this.domains.add({
+        configId: domain.id,
+        name: domain.name,
+        baseRate: domain.baseRate,
+        dailySoftCapMinutes: domain.dailySoftCapMinutes,
+        dailyHardCapMinutes: domain.dailyHardCapMinutes,
+        colorHint: domain.colorHint,
+        isActive: domain.isActive,
+        lifetimeMinutes: 0,
+        level: 1,
+        multiplier: 1.0
+      });
+      domainIdMap.set(domain.id, id);
+    }
+    console.log(`Imported ${config.domains.length} domains (v2)`);
+    
+    // Import activities from activityLibrary
+    for (const activity of config.activityLibrary) {
+      const domainId = domainIdMap.get(activity.domainId);
+      if (domainId) {
+        await this.activities.add({
+          configId: activity.id,
+          domainId,
+          domainConfigId: activity.domainId,
+          name: activity.name,
+          tags: activity.tags,
+          rateOverride: activity.rateOverride,
+          deepWorkEligible: activity.deepWorkEligible,
+          minBlockMinutes: activity.minBlockMinutes,
+          notesPrompt: activity.notesPrompt,
+          isActive: true
+        });
+      }
+    }
+    console.log(`Imported ${config.activityLibrary.length} activities (v2)`);
+    
+    // Import shop items with requirements
+    for (const item of config.shopItems) {
+      await this.shopItems.add({
+        category: item.category,
+        name: item.name,
+        pricePoints: item.pricePoints,
+        cooldownDays: item.cooldownDays,
+        requiresReview: item.requiresReview,
+        requirements: item.requirements,
+        isActive: item.isActive
+      });
+    }
+    console.log(`Imported ${config.shopItems.length} shop items (v2)`);
+    
+    // Store full config in localStorage for reference (meta, economy, multipliers, etc.)
+    localStorage.setItem('lifeMotivatorFullConfig', JSON.stringify(config));
+    localStorage.setItem('lifeMotivatorConfigVersion', '2');
+    localStorage.setItem('lifeMotivatorConfigImported', 'true');
+    
+    // Store meta info separately for easy access
+    if (config.meta) {
+      localStorage.setItem('lifeMotivatorMeta', JSON.stringify(config.meta));
+    }
+    
+    return { 
+      success: true, 
+      message: `Successfully imported: ${config.domains.length} domains, ${config.activityLibrary.length} activities, ${config.shopItems.length} shop items` 
+    };
+  }
+
+  // Get stored full config (v2 only)
+  getFullConfig(): PersonalConfigV2 | null {
+    const stored = localStorage.getItem('lifeMotivatorFullConfig');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Get meta info
+  getMeta(): PersonalConfigV2['meta'] | null {
+    const stored = localStorage.getItem('lifeMotivatorMeta');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   // Check if personal config has been imported

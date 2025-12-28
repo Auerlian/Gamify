@@ -2,19 +2,29 @@
 
 export interface Domain {
   id?: number;
+  configId?: string; // ID from config file (e.g., "startup", "freelance")
   name: string;
-  baseRate: number; // points per hour
+  baseRate: number; // points per minute
   lifetimeMinutes: number;
   level: number;
   multiplier: number;
   dailySoftCapMinutes?: number;
+  dailyHardCapMinutes?: number;
+  colorHint?: string;
   isActive: boolean;
 }
 
 export interface Activity {
   id?: number;
+  configId?: string; // ID from config file
   domainId: number;
+  domainConfigId?: string; // Reference to domain's configId
   name: string;
+  tags?: string[];
+  rateOverride?: number | null;
+  deepWorkEligible?: boolean;
+  minBlockMinutes?: number;
+  notesPrompt?: string;
   isActive: boolean;
 }
 
@@ -48,6 +58,7 @@ export interface ShopItem {
   description?: string;
   cooldownDays?: number;
   requiresReview: boolean;
+  requirements?: string[]; // e.g., ["medical_consult_logged", "savings_check_logged"]
   realCostEstimate?: string;
   isActive: boolean;
   achievedCount?: number; // Track how many times this item has been purchased
@@ -71,14 +82,71 @@ export interface LedgerEntry {
   description: string;
 }
 
-// Personal config that can be imported
-export interface PersonalConfig {
-  version: number;
-  domains: Omit<Domain, 'id' | 'lifetimeMinutes' | 'level' | 'multiplier'>[];
+// Personal config that can be imported (supports v1 simple and v2 detailed formats)
+export interface PersonalConfigV1 {
+  version: 1;
+  domains: { name: string; baseRate: number; dailySoftCapMinutes?: number; isActive: boolean }[];
   activities: { domainName: string; activities: string[] }[];
   shopItems: Omit<ShopItem, 'id'>[];
   bonusMilestones: { title: string; points: number }[];
 }
+
+export interface PersonalConfigV2 {
+  version: 2;
+  meta?: {
+    ownerName?: string;
+    timezone?: string;
+    currencyName?: string;
+    rateUnit?: string;
+    appName?: string;
+    createdAtISO?: string;
+  };
+  economy?: {
+    sessionRoundingMinutes?: number;
+    minSessionMinutes?: number;
+    maxManualBackfillDays?: number;
+    defaultSessionTags?: string[];
+    antiGaming?: Record<string, unknown>;
+    diminishingReturns?: Record<string, unknown>;
+    reviewGates?: Record<string, unknown>;
+  };
+  domains: {
+    id: string;
+    name: string;
+    baseRate: number;
+    dailySoftCapMinutes?: number;
+    dailyHardCapMinutes?: number;
+    isActive: boolean;
+    colorHint?: string;
+  }[];
+  activityLibrary: {
+    id: string;
+    domainId: string;
+    name: string;
+    tags?: string[];
+    rateOverride?: number | null;
+    deepWorkEligible?: boolean;
+    minBlockMinutes?: number;
+    notesPrompt?: string;
+  }[];
+  multipliers?: Record<string, unknown>;
+  bonuses?: Record<string, unknown>;
+  bonusMilestones?: { title: string; points: number; requiresReview?: boolean }[];
+  shopRules?: Record<string, unknown>;
+  shopItems: {
+    category: string;
+    name: string;
+    pricePoints: number;
+    cooldownDays?: number;
+    requiresReview: boolean;
+    requirements?: string[];
+    isActive: boolean;
+  }[];
+  requirementsLibrary?: { id: string; description: string }[];
+  ui?: Record<string, unknown>;
+}
+
+export type PersonalConfig = PersonalConfigV1 | PersonalConfigV2;
 
 // Level progression constants
 export const LEVEL_THRESHOLDS = [0, 25, 75, 150, 300, 600, 1000, 1600, 2500, 4000];

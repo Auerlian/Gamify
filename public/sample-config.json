@@ -1,32 +1,68 @@
 {
-  "version": 1,
+  "version": 2,
+  "meta": {
+    "ownerName": "User",
+    "timezone": "UTC",
+    "currencyName": "Points",
+    "rateUnit": "points_per_minute",
+    "appName": "Life Motivator"
+  },
+
+  "economy": {
+    "sessionRoundingMinutes": 5,
+    "minSessionMinutes": 10,
+    "maxManualBackfillDays": 3
+  },
+
   "domains": [
-    { "name": "Work", "baseRate": 12, "dailySoftCapMinutes": 480, "isActive": true },
-    { "name": "Learning", "baseRate": 10, "dailySoftCapMinutes": 240, "isActive": true },
-    { "name": "Health", "baseRate": 8, "dailySoftCapMinutes": 120, "isActive": true },
-    { "name": "Personal", "baseRate": 6, "dailySoftCapMinutes": 180, "isActive": true }
+    { "id": "work", "name": "Work", "baseRate": 12, "dailySoftCapMinutes": 360, "dailyHardCapMinutes": 480, "isActive": true, "colorHint": "blue" },
+    { "id": "learning", "name": "Learning", "baseRate": 10, "dailySoftCapMinutes": 240, "dailyHardCapMinutes": 360, "isActive": true, "colorHint": "green" },
+    { "id": "health", "name": "Health", "baseRate": 8, "dailySoftCapMinutes": 120, "dailyHardCapMinutes": 180, "isActive": true, "colorHint": "red" },
+    { "id": "personal", "name": "Personal", "baseRate": 6, "dailySoftCapMinutes": 180, "dailyHardCapMinutes": 240, "isActive": true, "colorHint": "purple" }
   ],
-  "activities": [
-    { "domainName": "Work", "activities": ["Deep work", "Meetings", "Admin", "Planning"] },
-    { "domainName": "Learning", "activities": ["Reading", "Courses", "Practice", "Research"] },
-    { "domainName": "Health", "activities": ["Exercise", "Meditation", "Meal prep"] },
-    { "domainName": "Personal", "activities": ["Hobbies", "Social", "Errands"] }
+
+  "activityLibrary": [
+    { "id": "deep_work", "domainId": "work", "name": "Deep Work", "tags": ["focus"], "deepWorkEligible": true, "minBlockMinutes": 25, "notesPrompt": "What did you accomplish?" },
+    { "id": "meetings", "domainId": "work", "name": "Meetings", "tags": ["collab"], "deepWorkEligible": false, "minBlockMinutes": 15 },
+    { "id": "admin", "domainId": "work", "name": "Admin Tasks", "tags": ["ops"], "deepWorkEligible": false, "minBlockMinutes": 10 },
+    { "id": "study", "domainId": "learning", "name": "Study / Courses", "tags": ["learning"], "deepWorkEligible": true, "minBlockMinutes": 25, "notesPrompt": "What did you learn?" },
+    { "id": "reading", "domainId": "learning", "name": "Reading", "tags": ["learning"], "deepWorkEligible": true, "minBlockMinutes": 20 },
+    { "id": "exercise", "domainId": "health", "name": "Exercise", "tags": ["fitness"], "deepWorkEligible": false, "minBlockMinutes": 20, "notesPrompt": "What workout?" },
+    { "id": "meal_prep", "domainId": "health", "name": "Meal Prep", "tags": ["nutrition"], "deepWorkEligible": false, "minBlockMinutes": 15 },
+    { "id": "hobbies", "domainId": "personal", "name": "Hobbies", "tags": ["fun"], "deepWorkEligible": false, "minBlockMinutes": 15 },
+    { "id": "errands", "domainId": "personal", "name": "Errands", "tags": ["ops"], "deepWorkEligible": false, "minBlockMinutes": 10 }
   ],
-  "shopItems": [
-    { "category": "Treats", "name": "Coffee", "pricePoints": 2000, "requiresReview": false, "isActive": true },
-    { "category": "Treats", "name": "Takeout", "pricePoints": 8000, "requiresReview": false, "isActive": true },
-    { "category": "Treats", "name": "Nice meal out", "pricePoints": 20000, "cooldownDays": 7, "requiresReview": false, "isActive": true },
-    { "category": "Entertainment", "name": "Movie", "pricePoints": 5000, "requiresReview": false, "isActive": true },
-    { "category": "Entertainment", "name": "Game", "pricePoints": 15000, "requiresReview": false, "isActive": true },
-    { "category": "Big Purchases", "name": "Gadget", "pricePoints": 50000, "requiresReview": true, "isActive": true },
-    { "category": "Big Purchases", "name": "Major purchase", "pricePoints": 200000, "requiresReview": true, "isActive": true },
-    { "category": "Experiences", "name": "Day out", "pricePoints": 30000, "requiresReview": false, "isActive": true },
-    { "category": "Experiences", "name": "Weekend trip", "pricePoints": 100000, "requiresReview": true, "isActive": true }
-  ],
+
+  "multipliers": {
+    "enabled": true,
+    "tiers": [
+      { "name": "Bronze", "atMinutes": 0, "multiplier": 1.0 },
+      { "name": "Silver", "atMinutes": 6000, "multiplier": 1.1 },
+      { "name": "Gold", "atMinutes": 18000, "multiplier": 1.25 },
+      { "name": "Platinum", "atMinutes": 36000, "multiplier": 1.5 }
+    ]
+  },
+
   "bonusMilestones": [
     { "title": "First week complete", "points": 5000 },
     { "title": "30-day streak", "points": 25000 },
-    { "title": "Major goal achieved", "points": 50000 },
-    { "title": "100 hours in a domain", "points": 30000 }
-  ]
+    { "title": "100 hours tracked", "points": 30000 },
+    { "title": "Major goal achieved", "points": 50000 }
+  ],
+
+  "shopItems": [
+    { "category": "Treats", "name": "Coffee / Snack", "pricePoints": 2500, "cooldownDays": 0, "requiresReview": false, "isActive": true },
+    { "category": "Treats", "name": "Takeout", "pricePoints": 8000, "cooldownDays": 1, "requiresReview": false, "isActive": true },
+    { "category": "Treats", "name": "Nice meal out", "pricePoints": 20000, "cooldownDays": 7, "requiresReview": false, "isActive": true },
+    { "category": "Entertainment", "name": "Movie / Show", "pricePoints": 5000, "cooldownDays": 2, "requiresReview": false, "isActive": true },
+    { "category": "Entertainment", "name": "Game", "pricePoints": 15000, "cooldownDays": 14, "requiresReview": false, "isActive": true },
+    { "category": "Big Purchases", "name": "Gadget", "pricePoints": 50000, "cooldownDays": 30, "requiresReview": true, "isActive": true },
+    { "category": "Big Purchases", "name": "Major purchase", "pricePoints": 200000, "cooldownDays": 90, "requiresReview": true, "isActive": true },
+    { "category": "Experiences", "name": "Day out", "pricePoints": 30000, "cooldownDays": 14, "requiresReview": false, "isActive": true },
+    { "category": "Experiences", "name": "Weekend trip", "pricePoints": 100000, "cooldownDays": 60, "requiresReview": true, "isActive": true }
+  ],
+
+  "ui": {
+    "navigation": { "type": "tabs", "tabs": ["Today", "Log", "Shop", "Progress", "Settings"] }
+  }
 }
