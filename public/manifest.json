@@ -6,8 +6,8 @@
   "background_color": "#111827",
   "display": "standalone",
   "orientation": "portrait",
-  "scope": "/",
-  "start_url": "/",
+  "scope": "/Gamify/",
+  "start_url": "/Gamify/",
   "icons": [
     {
       "src": "icon-192.png",
